@@ -1,0 +1,248 @@
+POSICIONAR MACRO rengl, col
+    MOV AH, 02h
+    MOV BH, 00h
+    MOV DH, rengl
+    MOV DL, col
+    INT 10h
+ENDM
+
+POSICIONAR_INC MACRO rengl, col, inc
+    MOV AH, 02h
+    MOV BH, 00h
+    MOV DH, rengl
+    MOV DL, col
+    ADD DL, inc
+    INT 10h
+ENDM
+
+IMPRIMIR MACRO cadena
+    MOV DX, OFFSET cadena
+    MOV AH, 09H
+    INT 21h
+ENDM
+
+IMPRIMIR_CARACTER MACRO char
+    MOV DL, char
+    MOV AH, 02h
+    INT 21h
+ENDM
+
+IMPRIMIR_CARACTER_COLOR MACRO char, color
+    PUSH CX
+    MOV AL, char
+    MOV BL, color
+
+    MOV AH, 09h
+    MOV BH, 0
+    MOV CX, 1
+    INT 10h
+    POP CX
+ENDM
+
+LEER_CADENA MACRO Arr, largo
+    LOCAL CICLO
+    LOCAL FIN
+
+    MOV CX, largo
+    MOV SI, 0
+
+    CICLO:
+        CALL PEDIR_CARACTER
+        CMP AL, 0DH
+        JE FIN
+        MOV Arr[SI], AL
+        INC SI
+        LOOP CICLO
+        CALL SALTO
+    
+    FIN:
+
+ENDM
+
+VACIAR_CADENA MACRO Arr
+    LOCAL CICLO
+
+    MOV CX, LENGTHOF Arr - 1
+    MOV SI, 0
+
+    CICLO:
+        MOV Arr[SI], 0
+        INC SI
+        LOOP CICLO
+ENDM
+
+OPCIONFIRST MACRO opcion, OPCIONNEXT
+    CMP CX, 35
+    JB CLICK_IZQUIERDO
+    CMP CX, 37
+    JA OPCIONNEXT
+    POP SI
+    MOV Ingresada[SI], opcion + 30H
+    INC SI
+    PUSH SI
+    ;IMPRIMIR_CARACTER opcion + 30h
+    IMPRIMIR Ingresada
+    
+    CMP SI, LargoI
+    JE FIN 
+    JMP ESPERAR
+ENDM
+
+OPCIONSECOND MACRO opcion, OPCIONNEXT
+    CMP CX, 39
+    JB CLICK_IZQUIERDO
+    CMP CX, 41
+    JA OPCIONNEXT
+    POP SI
+    MOV Ingresada[SI], opcion + 30H
+    INC SI
+    PUSH SI
+    IMPRIMIR Ingresada
+    ;IMPRIMIR_CARACTER opcion + 30h
+
+    CMP SI, LargoI
+    JE FIN 
+    JMP ESPERAR
+ENDM
+
+OPCIONTHIRD MACRO opcion
+    CMP CX, 43
+    JB CLICK_IZQUIERDO
+    CMP CX, 45
+    JA CLICK_IZQUIERDO
+    POP SI
+    MOV Ingresada[SI], opcion + 30h
+    INC SI
+    PUSH SI
+    IMPRIMIR Ingresada
+    ;IMPRIMIR_CARACTER opcion + 30h
+
+    CMP SI, LargoI
+    JE FIN 
+    JMP ESPERAR
+ENDM
+
+;=============================================
+.CODE
+SALIR PROC
+    MOV AH, 4Ch
+    INT 21H
+SALIR ENDP
+
+SALTO PROC
+    MOV DL, 0DH
+    MOV AH, 02H
+    INT 21H
+    MOV DL, 0AH
+    INT 21H
+    RET
+SALTO ENDP
+
+LIMPIAR PROC
+    MOV AH, 06H
+    MOV AL, 00H
+    MOV BH, 07H
+    MOV CX, 0
+    MOV DX, 7924
+    INT 10H
+    RET
+LIMPIAR ENDP
+
+CONVERTIR PROC
+    SHR CX, 3
+    SHR DX, 3
+    RET
+CONVERTIR ENDP
+
+INICIAR_CLICK PROC
+    MOV AX, 0000H
+    INT 33h
+    RET
+INICIAR_CLICK ENDP
+
+MOSTRAR_CLICK PROC
+    MOV AX, 0001H
+    INT 33h
+    Ret
+MOSTRAR_CLICK ENDP
+
+OCULTAR_CLICK PROC
+    MOV AX, 0002h
+    INT 33H
+    RET
+OCULTAR_CLICK ENDP
+
+CLICK PROC
+    MOV AX, 0003h
+    INT 33h
+    RET
+CLICK ENDP
+
+PEDIR_CARACTER PROC
+    MOV AH, 01h
+    INT 21H
+    RET
+PEDIR_CARACTER ENDP
+
+DELAY PROC
+    MOV AH, 86H
+    MOV CX, 001EH
+    MOV DX, 8480H
+    INT 15H
+    RET
+DELAY ENDP
+
+INICIO PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    MOV ES, AX
+    RET
+INICIO ENDP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DELAY_PUERTO PROC
+    MOV CX, 0FFFFh     ; 2. Cargamos un contador grande en CX
+    IN AL, 61h         ; 3. Leemos el puerto 61h
+    AND AL, 10h        ; 4. Aislamos el bit 4 (Refresh Bit)
+    MOV AH, AL         ; 5. Guardamos ese estado inicial en AH
+
+ESPERAR_CAMBIO:
+    IN AL, 61h         ; 6. Volvemos a leer el puerto
+    AND AL, 10h        ; 7. Volvemos a aislar el bit 4
+    CMP AL, AH         ; 8. ¿El bit es igual al que guardamos antes?
+    JE ESPERAR_CAMBIO  ; 9. Si es igual, el tiempo no ha pasado, sigue leyendo
+    
+    MOV AH, AL         ; 10. El bit cambió, actualizamos AH con el nuevo estado
+    LOOP ESPERAR_CAMBIO; 11. Repetimos el proceso CX veces
+    
+    RET                ; 13. Regresamos
+DELAY_PUERTO ENDP
+
+
+
+
+
