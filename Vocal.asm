@@ -54,7 +54,7 @@ MOSTRAR_VOCALES:
     LOOP MOSTRAR_VOCALES
     MOV i, 0
 
-;===========================================
+;==========================================
     POSICIONAR 24,0
     IMPRIMIR msgPedirCadena
     LEER_CADENA cadena, largo
