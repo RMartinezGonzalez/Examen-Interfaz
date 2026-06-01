@@ -27,6 +27,31 @@ IMPRIMIR_CARACTER MACRO char
     INT 21h
 ENDM
 
+IMPRIMIR_COLOR MACRO Arr
+    LOCAL CICLO_COLOR
+
+    PUSH SI
+    PUSH CX
+
+    MOV SI, 0
+    MOV CX, LENGTHOF Arr - 1
+
+    CICLO_COLOR:        
+        
+        IMPRIMIR_CARACTER_COLOR Arr[SI], 1FH
+        INC DL
+        POSICIONAR DH, DL
+        INC SI
+    LOOP CICLO_COLOR
+
+    POP CX
+    POP SI
+ENDM
+
+
+
+
+
 IMPRIMIR_CARACTER_COLOR MACRO char, color
     PUSH CX
     MOV AL, char
@@ -185,12 +210,38 @@ PEDIR_CARACTER PROC
 PEDIR_CARACTER ENDP
 
 DELAY PROC
-    MOV AH, 86H
-    MOV CX, 001EH
-    MOV DX, 8480H
-    INT 15H
+    PUSH CX
+    PUSH BX
+
+    MOV CX, 50
+    CICLO1:
+        MOV BX, 0FFFFH
+        CICLO2:
+            DEC BX
+            JNZ CICLO2
+        LOOP CICLO1
+
+    POP BX
+    POP CX
     RET
 DELAY ENDP
+
+DELAY_CORTO PROC
+    PUSH CX
+    PUSH BX
+
+    MOV CX, 10
+    CICLO1:
+        MOV BX, 0FFFFH
+        CICLO2:
+            DEC BX
+            JNZ CICLO2
+        LOOP CICLO1
+
+    POP BX
+    POP CX
+    RET
+DELAY_CORTO ENDP
 
 INICIO PROC
     MOV AX, @DATA
@@ -199,6 +250,33 @@ INICIO PROC
     RET
 INICIO ENDP
 
+TOCAR_NOTA PROC
+    PUSH AX
+    
+    MOV AL, 0B6h
+    OUT 43h, AL
+
+    MOV AX, BX
+    OUT 42h, AL
+    MOV AL, AH
+    OUT 42h, AL
+
+    IN AL, 61h
+    OR AL, 03h
+    OUT 61h, AL
+
+    POP AX
+    RET
+TOCAR_NOTA ENDP
+
+APAGAR_BOCINA PROC
+    PUSH AX
+    IN AL, 61h
+    AND AL, 0FCh
+    OUT 61h, AL
+    POP AX
+    RET
+APAGAR_BOCINA ENDP
 
 
 
@@ -223,6 +301,13 @@ INICIO ENDP
 
 
 
+DELAY_INT PROC
+    MOV AH, 86H
+    MOV CX, 001EH
+    MOV DX, 8480H
+    INT 15H
+    RET
+DELAY_INT ENDP
 
 DELAY_PUERTO PROC
     MOV CX, 0FFFFh     ; 2. Cargamos un contador grande en CX

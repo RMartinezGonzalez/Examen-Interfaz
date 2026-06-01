@@ -11,12 +11,18 @@ include Libreria.lib
     colores DB 0FH, 0FH, 0FH, 0FH, 0FH
     flechasColores DB 00H, 00H, 00H, 00H, 00H
     i DB 0
-    msgCaracter DB 'Ingrese una vocal que quiere cambiar de color: $'
+    msgCaracter DB 'Ingrese un caracter a encontrar: $'
     msgPedirCadena DB 'Ingrese una cadena: $'
     cadena DB 10 DUP (?), '$'
     largo EQU $ - cadena - 1
 
-    msgText DB 'El largo de la cadena es: $'
+    encontrados DB largo DUP (?)
+
+    msgEncontrado DB 'Se ha encontrado el caracter en la posicion: $'
+    msgNoEncontrado DB 'No se ha encontrado el caracter: $'
+
+    ;msgText DB 'El largo de la cadena es: $'
+    
 .CODE
 
 
@@ -48,18 +54,71 @@ MOSTRAR_VOCALES:
     LOOP MOSTRAR_VOCALES
     MOV i, 0
 
+;===========================================
     POSICIONAR 24,0
     IMPRIMIR msgPedirCadena
     LEER_CADENA cadena, largo
     PUSH SI
-    IMPRIMIR cadena
-    CALL SALTO
-    IMPRIMIR msgText
-    MOV AX, SI
-    ADD AX, 30H
-    IMPRIMIR_CARACTER al
+    ;IMPRIMIR cadena
+
+
+    ;CALL SALTO
+    ;IMPRIMIR msgText
+    ;MOV AX, SI
+    ;ADD AX, 30H
+    ;IMPRIMIR_CARACTER al
+
+    ;CALL SALTO
+    IMPRIMIR msgCaracter
     CALL PEDIR_CARACTER
+
+    PUSH AX
+
+
+    MOV DI, OFFSET cadena
+    MOV BX, DI
+    MOV CX, SI
+SCAREP:
+
+    CLD
+
+    REPNE SCASB
+    JNZ NOENCONTRADO
+
+    PUSH AX
+
+    CALL SALTO
+    IMPRIMIR msgEncontrado
+
+    DEC DI
+    MOV DX, DI
     
+    SUB DX, BX
+
+
+    ADD DX, 30H
+    IMPRIMIR_CARACTER DL
+
+    INC DI
+
+    POP AX
+    CMP CX, 0
+    INC i
+    JNE SCAREP
+    MOV i, 0
+    JMP NEXT
+    
+NOENCONTRADO:
+    CMP i, 0
+    MOV i, 0
+    JNE NEXT
+    CALL SALTO
+    IMPRIMIR msgNoEncontrado
+
+NEXT:
+    CALL PEDIR_CARACTER
+    POP AX
+
     MOV SI, 0
     MOV CX, 5
 COMPARAR:
@@ -95,8 +154,6 @@ LIMPIAR_FLECHAS:
     MOV i, 0
 
     JMP MOSTRAR_TODO
-
-
 
 FIN:
     CALL SALIR
